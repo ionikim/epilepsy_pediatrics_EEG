@@ -7,13 +7,21 @@ This directory contains CSV files for visualizing the Visibility Graph (VG) netw
 ---
 
 ## File Structure
+
 ├── cosmograph_nodes_CZ.csv      # CZ electrode nodes (timeline)
+
 ├── cosmograph_edges_CZ.csv      # CZ electrode edges (timeline)
+
 ├── cosmograph_nodes_all.csv     # All 23 electrodes nodes (timeline)
+
 ├── cosmograph_edges_all.csv     # All 23 electrodes edges (timeline)
+
 ├── cosmo_pre_nodes.csv          # Pre-ictal nodes, all electrodes (static)
+
 ├── cosmo_pre_edges.csv          # Pre-ictal edges, all electrodes (static)
+
 ├── cosmo_ict_nodes.csv          # Ictal nodes, all electrodes (static)
+
 └── cosmo_ict_edges.csv          # Ictal edges, all electrodes (static)
 
 ---
