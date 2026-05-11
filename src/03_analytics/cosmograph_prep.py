@@ -5,14 +5,14 @@ Nodes  = individual HVG timepoints (23 channels × phase_duration)
            interictal : 23 × 4096 = 94,208 nodes  (0–16 s)
            ictal      : 23 × 3584 = 82,432 nodes  (16–30 s)
 
-Edges  = HVG adjacency edges within each phase (same file for all algorithms)
+Edges: all HVG edges included (no weight threshold)
 
 Community algorithms:
   Stream Moore  — community_labels.npy (per-node, from full-graph run)
-  LPA           — synchronous weighted LPA, channel-initialised on HVG subgraph
-  Hierarchical  — Ward clustering on phase-specific channel correlations;
+  LPA           — synchronous weighted LPA, channel-initialised on filtered subgraph
+  Hierarchical  — Ward clustering on phase-specific channel correlations (threshold 0.5);
                   each timepoint inherits its channel's cluster label
-  Spectral      — spectral clustering on phase-specific channel correlations;
+  Spectral      — spectral clustering on phase-specific channel correlations (threshold 0.5);
                   each timepoint inherits its channel's cluster label
 
 Outputs (src/03_analytics/outputs/cosmograph/):
@@ -45,7 +45,7 @@ N_CH         = 23
 N_TP         = 7680        # total timepoints per channel (30 s × 256 Hz)
 ONSET        = 4096        # seizure onset sample (16 s × 256 Hz)
 FS           = 256
-THRESHOLD    = 0.3         # correlation threshold for hierarchical / spectral
+THR_CORR     = 0.5         # correlation threshold for hierarchical / spectral
 K_CLUSTERS   = 4
 
 CHANNEL_NAMES = [
@@ -88,24 +88,12 @@ def remap(labels):
 
 
 # ── helper: channel-level hierarchical clustering ─────────────────────────
-def hier_spectral_for_phase(t_start, t_end):
+def hier_spectral_for_phase(ch_temporal, corr):
     """
-    Compute phase-specific 23×23 channel correlation, then run Ward
-    hierarchical clustering and spectral clustering.
+    Run Ward hierarchical clustering and spectral clustering on the
+    already-computed phase-specific 23×23 channel correlation matrix.
     Returns (hier_labels, spec_labels) — one label per channel (0-22).
     """
-    n_tp = t_end - t_start
-    ch_temporal = np.zeros((N_CH, n_tp), dtype=np.float64)
-    for ch in range(N_CH):
-        s = ch * N_TP + t_start
-        e = ch * N_TP + t_end
-        ch_temporal[ch] = np.array(mat[s:e, s:e].sum(axis=1)).flatten()
-
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        corr = np.corrcoef(ch_temporal)
-    corr = np.nan_to_num(corr, nan=0.0)
-
     # — hierarchical (Ward) —
     dist    = squareform(np.clip(1.0 - corr, 0.0, None), checks=False)
     linkage = sch.linkage(dist, method="ward")
@@ -113,8 +101,8 @@ def hier_spectral_for_phase(t_start, t_end):
 
     # — spectral —
     A = corr.copy()
-    A[A < THRESHOLD] = 0.0
-    A[A < 0]         = 0.0
+    A[A < THR_CORR] = 0.0
+    A[A < 0]        = 0.0
     np.fill_diagonal(A, 0.0)
     deg        = A.sum(axis=1)
     d_inv_sqrt = np.where(deg > 0, 1.0 / np.sqrt(np.maximum(deg, 1e-10)), 0.0)
@@ -181,12 +169,11 @@ def run_lpa(adj_csr, init_labels, max_iter=50):
 
 # ── main: process each phase ───────────────────────────────────────────────
 for phase, (t_start, t_end) in PHASES.items():
-    n_tp_phase = t_end - t_start
-    n_nodes    = N_CH * n_tp_phase
+    n_nodes = N_CH * (t_end - t_start)
 
     print(f"{'='*60}")
     print(f"  PHASE: {phase.upper()}  "
-          f"({t_start/FS:.0f}–{t_end/FS:.0f} s  |  {n_tp_phase} samples/channel)")
+          f"({t_start/FS:.0f}–{t_end/FS:.0f} s  |  {t_end-t_start} samples/channel)")
     print(f"  nodes: {n_nodes:,}")
     print(f"{'='*60}")
 
@@ -196,12 +183,41 @@ for phase, (t_start, t_end) in PHASES.items():
         for ch in range(N_CH)
     ])                                            # shape (n_nodes,)
 
-    # Subgraph (sparse, local indices 0..n_nodes-1)
-    print("  Extracting HVG subgraph …")
-    adj_sub = mat[node_ids][:, node_ids].tocsr()
-    adj_coo = adj_sub.tocoo()
-    n_edges = int((adj_coo.row < adj_coo.col).sum())
+    # ── build filtered subgraph ───────────────────────────────────────────
+    print("  Extracting & filtering HVG subgraph …")
+
+    # channel-channel correlation for this phase (used to gate inter-layer edges)
+    n_tp_phase = t_end - t_start
+    ch_temporal = np.zeros((N_CH, n_tp_phase), dtype=np.float64)
+    for ch in range(N_CH):
+        s = ch * N_TP + t_start
+        e = ch * N_TP + t_end
+        ch_temporal[ch] = np.array(mat[s:e, s:e].sum(axis=1)).flatten()
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        phase_corr = np.corrcoef(ch_temporal)
+    phase_corr = np.nan_to_num(phase_corr, nan=0.0)
+
+    # raw subgraph
+    adj_raw = mat[node_ids][:, node_ids].tocoo()
+
+    # keep all edges (upper triangle only)
+    mask   = adj_raw.row < adj_raw.col
+    keep   = list(zip(adj_raw.row[mask], adj_raw.col[mask], adj_raw.data[mask]))
+    n_edges = len(keep)
     print(f"  edges: {n_edges:,}")
+
+    # rebuild filtered sparse matrix for LPA
+    if keep:
+        rs, cs, vs = zip(*keep)
+        rs, cs, vs = np.array(rs), np.array(cs), np.array(vs, dtype=np.float32)
+        adj_sub = sp.csr_matrix(
+            (np.concatenate([vs, vs]),
+             (np.concatenate([rs, cs]), np.concatenate([cs, rs]))),
+            shape=(n_nodes, n_nodes),
+        )
+    else:
+        adj_sub = sp.csr_matrix((n_nodes, n_nodes))
 
     # ── community labels ──────────────────────────────────────────────────
 
@@ -218,7 +234,7 @@ for phase, (t_start, t_end) in PHASES.items():
 
     # 3 & 4. Hierarchical + Spectral — channel-level, then extend to timepoints
     print("  [3/4] Hierarchical  &  [4/4] Spectral …")
-    hier_ch, spec_ch = hier_spectral_for_phase(t_start, t_end)
+    hier_ch, spec_ch = hier_spectral_for_phase(ch_temporal, phase_corr)
     hier_sub = remap(np.array([hier_ch[int(nid) // N_TP] for nid in node_ids]))
     spec_sub = remap(np.array([spec_ch[int(nid) // N_TP] for nid in node_ids]))
     print(f"        hierarchical clusters : {len(np.unique(hier_sub))}")
@@ -230,9 +246,8 @@ for phase, (t_start, t_end) in PHASES.items():
     with open(edges_path, "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
         w.writerow(["source", "target", "weight"])
-        for r, c, v in zip(adj_coo.row, adj_coo.col, adj_coo.data):
-            if r < c:
-                w.writerow([int(node_ids[r]), int(node_ids[c]), round(float(v), 6)])
+        for r, c, v in keep:
+            w.writerow([int(node_ids[r]), int(node_ids[c]), round(float(v), 6)])
 
     # ── write per-algorithm node CSVs ─────────────────────────────────────
     algo_labels = {
