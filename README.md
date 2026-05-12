@@ -130,4 +130,4 @@ We will benchmark our solution against existing algorithms and evaluate the stre
 | checked for benchmarking approaches  2   | work in progress: find a solution without groundtruth -> Evaluation using Clustering Quality Measures: Clustering quality measures, e.g., SSE (sum of squared errors) or inter- cluster distance  Quality measures used to evaluate community detection should be different from the ones used to find communities.  | Simon            |
 | Insights & Analysis | Get the big picture and structure for report                      | Simon |
 | Draft Final report |     -                | Simon |
-| Edit & detail final report | edit and detail the final report according to one's each tasks                | Everyone |
+| Writing Final Report |                 | Everyone |
