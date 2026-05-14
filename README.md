@@ -82,11 +82,11 @@ Instead of measuring pairwise correlations between electrodes, we build a Visibi
 
 The precomputed adjacency matrix is stored as a sparse matrix of size 176,640 × 176,640, representing all VG connections across 23 electrodes and 7,680 timepoints. Each node index corresponds to both an electrode and a specific timepoint within the full recording.
 
-### 2) Network Exploration & Analytics (Simon Krummenacher, Antonia Spörk): 
+### 2) Network Exploration & Analytics (Antonia Spörk,Simon Krummenacher): 
 
 We computed network measures to characterize brain connectivity across the seizure transition. Community detection was approached with three algorithms, all implemented from scratch: the **Label Propagation Algorithm (LPA)**, applied directly to the HVG adjacency matrix; the **Stream-Moore algorithm**, a streaming modularity-maximisation approach which proved unsuitable for this graph due to near-uniform node degree (~22) and negative modularity; and **Laplacian Spectral Clustering**, which embeds channels in eigenspace via the normalised graph Laplacian and clusters them with a custom k-means++ implementation. Additionally, **Ward linkage hierarchical clustering** was applied to sliding-window channel correlation matrices to reveal functional groupings over time. All algorithms were benchmarked using structural quality metrics (intra-cluster edge density, conductance, clustering coefficient, inter/intra edge ratio) computed without ground truth labels.
 
-### 3) Network Visualization (Marina Köhli, Ji-One Kim): 
+### 3) Network Visualization (Marina Köhli, Ji-One Kim, Antonia Spörk): 
 
 We visualize the evolving VG network using two complementary approaches:
 
@@ -101,7 +101,7 @@ eeg_vg_comparison_static.html — Compares pre-ictal and ictal circular visibili
 eeg_visibility_graph_online_mini_timepoint.html — Animates all 23 electrodes as circular visibility graphs to show seizure evolution over time.
 eeg_vg_network_inter.html — Visualizes changing functional connectivity across 23 electrodes during seizure onset.
 
-### 4) Analysis and Interpretation (Antonia Spörk, Simon Krummenacher): 
+### 4) Analysis and Interpretation (Simon Krummenacher): 
 
 We will benchmark our solution against existing algorithms and evaluate the strengths and limitations of our project. If capacity allows, we might additionally predict other seizure states within/between subjects and/or conduct an influencer analysis of seizure source electrodes. 
 
