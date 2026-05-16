@@ -40,7 +40,7 @@ def plot_algorithm(values, label, ax):
 fig = plt.figure(figsize=(6, 7.5))
 ax = plt.subplot(111, polar=True)
 
-# Remove outer circle (clean look)
+# Remove outer circle
 ax.spines['polar'].set_visible(False)
 ax.set_frame_on(False)
 
@@ -49,7 +49,7 @@ for r in [1, 2, 3, 4, 5]:
     ax.plot(angles, [r] * len(angles), linewidth=0.4, linestyle='dotted')
 
 # -----------------------------
-# Plot algorithms (full names)
+# Plot algorithms
 # -----------------------------
 plot_algorithm(ward, 'Ward Hierarchical Clustering', ax)
 plot_algorithm(lpa, 'Label Propagation Algorithm', ax)
@@ -66,7 +66,7 @@ ax.set_yticks([])
 # Title
 plt.title('Radar Diagram', pad=25)
 
-# Legend BELOW plot (no overlap)
+# Legend BELOW plot
 plt.legend(loc='lower center', bbox_to_anchor=(0.5, -0.35), ncol=2)
 
 # Layout & save
