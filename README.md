@@ -129,7 +129,7 @@ We will benchmark our solution against existing algorithms and evaluate the stre
 |                                                | Segment DataFrame into windows and averaging                     | Marina            |
 |                                                | Create node list, inter- and intra-layer edges, adjacency matrix | Ji-One            |
 |                                                | Visualize it in Gephi, compute first exploratory metrics         | Ji-One and Marina |
-|                                                | Visualisations and analyses (heatmap, group-level averages and difference analyses) | Ji-One |
+|                                                | Visualisations (Static visualization, MVG visualization(intra-layer and inter-layer) ) | Ji-One |
 | Ordinal Pattern Transition Network creation    | Remove re-referencing, create OPTN, identify electrodes with stronger ictal-interictal differences, visualize it in Gephi                                                                                               | Ji-One            |
 | Continuous Multiplex HVG creation              | Apply code from categorical HVG graphs to one continuous window (interictal to ictal) | Marina |
 |                                                | Storage in LFS                                                   | Marina            |
@@ -144,3 +144,4 @@ We will benchmark our solution against existing algorithms and evaluate the stre
 | Insights & Analysis |   Get the big picture and structure for report                    | Simon |
 | Draft Final report |     -                | Simon |
 | Writing Final Report |                 | Everyone |
+| Adapting and Combining seperated codes into one code |                 | Jione |
