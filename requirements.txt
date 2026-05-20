@@ -11,6 +11,7 @@ pandas
 
 # ── Graph / network analysis ───────────────────────────────────────────────────
 networkx
+scikit-learn
 
 # ── Visualisation ──────────────────────────────────────────────────────────────
 matplotlib
