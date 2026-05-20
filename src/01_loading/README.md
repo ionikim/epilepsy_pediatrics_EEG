@@ -30,9 +30,9 @@ The preprocessing steps transform raw EEG signals into structured window-based d
 
 ## Output
 
-After preprocessing, each **5-second window** contains:
+After preprocessing, **30-seconds window** contains:
 
 - signal features for all electrodes
 - a label indicating **ictal** or **interictal**
 
-This structured data will be used in the next stage to construct **brain network graphs** and apply **social network analysis metrics**.
+This structured data will be used in the next stage to construct **Multiplex Visibility Graph**.
