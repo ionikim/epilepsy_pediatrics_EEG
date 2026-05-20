@@ -29,7 +29,6 @@ import scipy.cluster.hierarchy as sch
 import scipy.sparse as sp
 from scipy.spatial.distance import squareform
 
-# ── paths ──────────────────────────────────────────────────────────────────
 _HERE    = Path(__file__).resolve().parent
 BASE_DIR = _HERE.parents[1]
 NPZ_PATH = (
@@ -40,7 +39,6 @@ SM_LABELS_PATH = _HERE / "outputs" / "community_labels.npy"
 OUT_DIR        = _HERE / "outputs" / "cosmograph"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
-# ── config ─────────────────────────────────────────────────────────────────
 N_CH         = 23
 N_TP         = 7680        # total timepoints per channel (30 s × 256 Hz)
 ONSET        = 4096        # seizure onset sample (16 s × 256 Hz)
@@ -72,7 +70,6 @@ PHASES = {
     "ictal":      (ONSET, N_TP),    # 16–30 s
 }
 
-# ── load data ──────────────────────────────────────────────────────────────
 print("Loading adjacency matrix …")
 mat       = sp.load_npz(NPZ_PATH).tocsr()
 sm_labels = np.load(SM_LABELS_PATH)   # shape (176640,), per original node
@@ -80,14 +77,12 @@ print(f"  shape: {mat.shape}  |  {mat.nnz:,} non-zeros")
 print(f"  SM labels: {len(np.unique(sm_labels))} communities\n")
 
 
-# ── helper: remap label array to 0-indexed ints ────────────────────────────
 def remap(labels):
     unique = np.unique(labels)
     m      = {v: i for i, v in enumerate(unique)}
     return np.array([m[l] for l in labels], dtype=np.int64)
 
 
-# ── helper: channel-level hierarchical clustering ─────────────────────────
 def hier_spectral_for_phase(ch_temporal, corr):
     """
     Run Ward hierarchical clustering and spectral clustering on the
@@ -138,7 +133,6 @@ def hier_spectral_for_phase(ch_temporal, corr):
     return hier_ch, best_assign
 
 
-# ── helper: synchronous weighted LPA ──────────────────────────────────────
 def run_lpa(adj_csr, init_labels, max_iter=50):
     """
     Synchronous weighted LPA.
@@ -167,7 +161,6 @@ def run_lpa(adj_csr, init_labels, max_iter=50):
     return remap(labels)
 
 
-# ── main: process each phase ───────────────────────────────────────────────
 for phase, (t_start, t_end) in PHASES.items():
     n_nodes = N_CH * (t_end - t_start)
 
@@ -183,7 +176,6 @@ for phase, (t_start, t_end) in PHASES.items():
         for ch in range(N_CH)
     ])                                            # shape (n_nodes,)
 
-    # ── build filtered subgraph ───────────────────────────────────────────
     print("  Extracting & filtering HVG subgraph …")
 
     # channel-channel correlation for this phase (used to gate inter-layer edges)
@@ -219,20 +211,15 @@ for phase, (t_start, t_end) in PHASES.items():
     else:
         adj_sub = sp.csr_matrix((n_nodes, n_nodes))
 
-    # ── community labels ──────────────────────────────────────────────────
-
-    # 1. Stream Moore — look up per-node labels from saved array
     print("  [1/4] Stream Moore …")
     sm_sub = remap(sm_labels[node_ids])
     print(f"        communities: {len(np.unique(sm_sub))}")
 
-    # 2. LPA — synchronous, initialised by channel index
     print("  [2/4] LPA …")
     ch_init  = np.array([int(nid) // N_TP for nid in node_ids], dtype=np.int64)
     lpa_sub  = run_lpa(adj_sub, ch_init)
     print(f"        communities: {len(np.unique(lpa_sub))}")
 
-    # 3 & 4. Hierarchical + Spectral — channel-level, then extend to timepoints
     print("  [3/4] Hierarchical  &  [4/4] Spectral …")
     hier_ch, spec_ch = hier_spectral_for_phase(ch_temporal, phase_corr)
     hier_sub = remap(np.array([hier_ch[int(nid) // N_TP] for nid in node_ids]))
@@ -240,7 +227,6 @@ for phase, (t_start, t_end) in PHASES.items():
     print(f"        hierarchical clusters : {len(np.unique(hier_sub))}")
     print(f"        spectral clusters     : {len(np.unique(spec_sub))}")
 
-    # ── write shared edges CSV ────────────────────────────────────────────
     edges_path = OUT_DIR / f"{phase}_edges.csv"
     print(f"\n  Writing {edges_path.name} …")
     with open(edges_path, "w", newline="", encoding="utf-8") as f:
@@ -249,7 +235,6 @@ for phase, (t_start, t_end) in PHASES.items():
         for r, c, v in keep:
             w.writerow([int(node_ids[r]), int(node_ids[c]), round(float(v), 6)])
 
-    # ── write per-algorithm node CSVs ─────────────────────────────────────
     algo_labels = {
         "stream_moore": sm_sub,
         "lpa":          lpa_sub,
@@ -281,7 +266,6 @@ for phase, (t_start, t_end) in PHASES.items():
 
     print()
 
-# ── summary ────────────────────────────────────────────────────────────────
 print(f"All files written to:\n  {OUT_DIR}\n")
 print("Files per phase:")
 print("  {phase}_edges.csv              ← shared edge file for that phase")

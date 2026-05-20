@@ -42,4 +42,4 @@ cpu, nmi = sweet_spot_experiment(run_fn=run_ward_wrapped, terminations=ks, n_run
 plot_sweet_spot(ks, cpu, nmi,
                 title="Sweet Spot — Ward Hierarchical Clustering",
                 xlabel="Number of Clusters (Dendrogram Cut)",
-                out="ward_sweet_spot.png")
+                out=BASE_DIR / "reports" / "figures" / "ward_sweet_spot.png")

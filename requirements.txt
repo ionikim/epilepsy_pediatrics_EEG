@@ -1,1 +1,25 @@
--r requirements/requirements.txt
+# ── EEG / signal processing ───────────────────────────────────────────────────
+mne                   # EEG/MEG data loading, preprocessing, ICA
+ts2vg                 # time-series → visibility graph conversion
+
+# ── Numerical computing ────────────────────────────────────────────────────────
+numpy
+scipy
+
+# ── Data handling ──────────────────────────────────────────────────────────────
+pandas
+
+# ── Graph / network analysis ───────────────────────────────────────────────────
+networkx
+
+# ── Visualisation ──────────────────────────────────────────────────────────────
+matplotlib
+
+# ── Web dashboard ──────────────────────────────────────────────────────────────
+streamlit
+
+# ── Image / animation ──────────────────────────────────────────────────────────
+pillow                # required by matplotlib for saving GIF animations
+
+# ── Google Colab / Drive (notebook helpers) ────────────────────────────────────
+google-colab; sys_platform == "linux"   # only available in Colab notebooks

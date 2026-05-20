@@ -1,7 +1,7 @@
 """
 Laplacian Spectral Clustering — Streamlit Live Demo
 ====================================================
-Run with:  streamlit run spectral_streamlit_live.py
+Run with:  streamlit run streamlit_spectral.py
 """
 
 from pathlib import Path

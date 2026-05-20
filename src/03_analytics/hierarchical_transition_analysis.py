@@ -4,7 +4,7 @@ EEG Network Transition: Interictal → Ictal
 Dataset : CHB-MIT · chb01_03 · 2980-3010 s
 Onset   : +16 s into file (sample 4096)
  
-Run with:  python3 eeg_transition_analysis.py
+Run with:  python hierarchical_transition_analysis.py
 Plots are saved as PNG files in the same directory.
 """
  

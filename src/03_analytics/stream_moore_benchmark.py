@@ -45,8 +45,6 @@ CHANNEL_REGIONS = {
     "T8-P8-1": "temporal",
 }
 
-# STREAM-MOORE ALGORITHM  (copied from notebook)
-
 class UnionFind:
     def __init__(self, n):
         self.parent = list(range(n))
@@ -156,13 +154,11 @@ def stream_moore(adj, verbose=False):
     labels = np.array([unique_roots[l] for l in labels])
     return labels
 
-# LOAD GRAPH & RUN ALGORITHM
 print("Loading adjacency matrix ...")
 adj = sp.load_npz(NPZ_PATH)
 n   = adj.shape[0]
 print(f"  {n:,} nodes  |  {adj.nnz // 2:,} edges")
 
-# timed run for runtime metric
 tracemalloc.start()
 t0     = time.perf_counter()
 labels = stream_moore(adj, verbose=False)
@@ -174,12 +170,10 @@ runtime = t1 - t0
 unique_comms, comm_sizes = np.unique(labels, return_counts=True)
 print(f"  Communities: {len(unique_comms):,}  |  runtime: {runtime:.2f}s")
 
-# PHASE SPLIT
-# Node i → timepoint = i % N_TIMEPOINTS → interictal if < ONSET_SAMPLE
+# node i → timepoint = i % N_TIMEPOINTS → interictal if < ONSET_SAMPLE
 node_timepoints = np.arange(n) % N_TIMEPOINTS
 node_is_inter   = node_timepoints < ONSET_SAMPLE   # bool array
 
-# assign each community to interictal or ictal by majority node phase
 inter_comm_idx, ictal_comm_idx = [], []
 for c in unique_comms:
     idx = np.where(labels == c)[0]
@@ -191,8 +185,6 @@ for c in unique_comms:
 print(f"  Interictal communities: {len(inter_comm_idx):,}  |  "
       f"Ictal communities: {len(ictal_comm_idx):,}")
 
-# BENCHMARK METRIC FUNCTIONS
-
 def structural_metrics(adj_csr, comm_indices):
     """ICED, conductance, avg clustering coeff for a list of communities."""
     iced_l, cond_l, cc_l = [], [], []
@@ -201,15 +193,12 @@ def structural_metrics(adj_csr, comm_indices):
         if n_c < 2:
             continue
         sub  = adj_csr[idx, :][:, idx].toarray()
-        # ICED
         actual   = float(np.triu(sub, 1).sum())
         possible = n_c * (n_c - 1) / 2
         iced_l.append(actual / possible if possible > 0 else 0.0)
-        # Conductance
         vol  = float(adj_csr[idx, :].sum())
         cut  = vol - float(sub.sum())   # vol = 2*intra + cut → cut = vol - 2*intra; sub.sum()=2*intra
         cond_l.append(cut / vol if vol > 0 else 0.0)
-        # Clustering coefficient
         b = (sub > 0).astype(float)
         np.fill_diagonal(b, 0.0)
         for i in range(n_c):
@@ -256,7 +245,6 @@ def spatial_region_consistency(comm_indices):
 def _fmt(v):
     return "   inf  " if np.isinf(v) else f"{v:8.4f}"
 
-# COMPUTE METRICS
 print("\nComputing structural metrics ...")
 adj_csr = adj.tocsr()
 
@@ -271,7 +259,6 @@ print("Computing spatial region consistency ...")
 inter_src = spatial_region_consistency(inter_comm_idx)
 ictal_src  = spatial_region_consistency(ictal_comm_idx)
 
-# PRINT SUMMARY
 W = 34
 print(f"\n{'=' * 67}")
 print(f"  BENCHMARK SUMMARY — Moore Streaming  ·  CHB-01 chb01_03")
@@ -297,8 +284,7 @@ print(f"  {'Intra-Community Bandpower Var':<{W}}      N/A        N/A")
 print(f"  {'Spatial Region Consistency':<{W}} {_fmt(inter_src)}  {_fmt(ictal_src)}")
 print(f"{'=' * 67}\n")
 
-# SPIDER PLOT
-# All axes scaled to [0, 1] where outward (1) = better.
+# all axes scaled to [0, 1] where outward (1) = better.
 # Natural-range metrics (ICED, conductance, CC, SRC) stay on [0,1].
 # Inter/Intra Ratio is capped at _IIR_CAP and inverted.
 _IIR_CAP = 2.0

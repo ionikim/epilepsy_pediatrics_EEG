@@ -247,7 +247,6 @@ fig.suptitle(
     fontsize=13, y=0.98
 )
 plt.tight_layout()
-plt.savefig("sweet_spot_4algorithms.png", dpi=150)
-#below adjusted for lecturer so that pipline runs
+plt.savefig(BASE_DIR / "reports" / "figures" / "sweet_spot_4algorithms.png", dpi=150)
 plt.close()
 print("Done. Saved sweet_spot_4algorithms.png")

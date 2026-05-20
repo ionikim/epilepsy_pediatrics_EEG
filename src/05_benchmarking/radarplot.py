@@ -8,8 +8,13 @@ across four dimensions:
 - Adaptability
 - Interpretability
 """
+from pathlib import Path
+
 import numpy as np
 import matplotlib.pyplot as plt
+
+_HERE    = Path(__file__).resolve().parent
+BASE_DIR = _HERE.parent
 
 # -----------------------------
 # Data (normalized 1–5 scores)
@@ -71,6 +76,5 @@ plt.legend(loc='lower center', bbox_to_anchor=(0.5, -0.35), ncol=2)
 
 # Layout & save
 plt.tight_layout()
-plt.savefig('radar_diagram.png', dpi=300, bbox_inches='tight')
-#below adjusted for lecturer so that pipline runs
+plt.savefig(BASE_DIR / "reports" / "figures" / "radar_diagram.png", dpi=300, bbox_inches='tight')
 plt.close()

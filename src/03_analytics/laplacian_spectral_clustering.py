@@ -26,10 +26,8 @@ import scipy.sparse as sp
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
-# project root (works on any machine, regardless of clone location)
-# This file lives at <project_root>/src/03_analytics/
 _HERE = Path(__file__).resolve().parent
-BASE_DIR = _HERE.parents[1]          # go up: 03_analytics → src → project root
+BASE_DIR = _HERE.parents[1]
 FIGURES_DIR = BASE_DIR / "reports" / "figures"
 FIGURES_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -68,7 +66,6 @@ ICTAL_CLR      = "#f7936a"
 CLUSTER_COLORS = ["#7c6af7", "#f7936a", "#5ecfb1", "#e05c97", "#f5d547"]
  
  
-# STEP 1 — load & precompute correlation matrices (same as before)
 print("Loading adjacency matrix ...")
 mat = sp.load_npz(NPZ_PATH)
 print(f"  Shape: {mat.shape}  |  Non-zeros: {mat.nnz:,}")
@@ -101,133 +98,40 @@ all_temporals = np.array(all_temporals)  # (n_windows, 23, window_samples)
 print("Done.\n")
  
  
-# CORE FUNCTIONS — implemented from scratch in numpy
- 
 def build_adjacency(corr_matrix, threshold):
-    """
-    Convert a correlation matrix into a weighted adjacency matrix.
- 
-    Edges only exist where correlation > threshold.
-    Self-loops are removed (diagonal = 0).
-    Negative correlations are clipped to 0 (we want similarity, not dissimilarity).
- 
-    Parameters
-    ----------
-    corr_matrix : (N, N) array
-    threshold   : float, minimum correlation to keep an edge
- 
-    Returns
-    -------
-    A : (N, N) weighted adjacency matrix
-    """
     A = corr_matrix.copy()
-    A[A < threshold] = 0.0      # remove weak edges
-    A[A < 0]         = 0.0      # remove negative correlations
-    np.fill_diagonal(A, 0.0)    # no self-loops
+    A[A < threshold] = 0.0
+    A[A < 0]         = 0.0
+    np.fill_diagonal(A, 0.0)
     return A
  
  
 def compute_normalized_laplacian(A):
-    """
-    Compute the symmetric normalized graph Laplacian from scratch.
- 
-        L_sym = I - D^(-1/2) A D^(-1/2)
- 
-    where D is the diagonal degree matrix: D[i,i] = sum of row i of A.
- 
-    The normalized version is preferred over the unnormalized L = D - A
-    because it handles nodes with very different degrees (which is common
-    in EEG graphs where some channels are highly connected and others are not).
- 
-    Parameters
-    ----------
-    A : (N, N) weighted adjacency matrix (no self-loops)
- 
-    Returns
-    -------
-    L : (N, N) normalized Laplacian matrix
-    """
+    """L_sym = I - D^(-1/2) A D^(-1/2)"""
     N      = A.shape[0]
-    degree = A.sum(axis=1)                  # degree of each node
- 
-    # D^(-1/2): inverse square root of degree, handle degree=0 safely
+    degree = A.sum(axis=1)
+
     d_inv_sqrt = np.zeros(N)
     nonzero    = degree > 0
     d_inv_sqrt[nonzero] = 1.0 / np.sqrt(degree[nonzero])
- 
-    # Build D^(-1/2) as a diagonal matrix
+
     D_inv_sqrt = np.diag(d_inv_sqrt)
- 
-    # Normalized Laplacian: L = I - D^(-1/2) A D^(-1/2)
-    L = np.eye(N) - D_inv_sqrt @ A @ D_inv_sqrt
- 
-    return L
+    return np.eye(N) - D_inv_sqrt @ A @ D_inv_sqrt
  
  
 def spectral_embed(L, k):
-    """
-    Eigendecompose the Laplacian and return the k smallest eigenvectors.
- 
-    The smallest eigenvalue of L is always 0 (the constant vector).
-    The next k-1 eigenvectors encode the cluster structure of the graph —
-    this is the core insight of spectral clustering.
- 
-    We use numpy's eigh (symmetric eigenvalue solver) which is more
-    numerically stable than eig for symmetric matrices.
- 
-    Parameters
-    ----------
-    L : (N, N) normalized Laplacian
-    k : int, number of clusters = number of eigenvectors to keep
- 
-    Returns
-    -------
-    embedding : (N, k) matrix — each row is a channel in eigenspace
-    eigenvalues : (N,) sorted eigenvalues (for inspection)
-    """
+    """Returns k smallest eigenvectors of L; smallest eigenvalue is always 0."""
     eigenvalues, eigenvectors = np.linalg.eigh(L)
- 
-    # eigh returns eigenvalues in ascending order
-    # take the k smallest (they carry the cluster structure)
-    embedding = eigenvectors[:, :k]
- 
-    return embedding, eigenvalues
+    return eigenvectors[:, :k], eigenvalues
  
  
 def normalize_rows(X):
-    """
-    L2-normalize each row of the embedding matrix.
-    Standard practice before k-means on spectral embeddings —
-    projects all points onto the unit sphere so distance reflects
-    angle rather than magnitude.
-    """
     norms = np.linalg.norm(X, axis=1, keepdims=True)
-    norms[norms == 0] = 1.0     # avoid division by zero for isolated nodes
+    norms[norms == 0] = 1.0
     return X / norms
  
  
 def kmeans_scratch(X, k, n_init=10, max_iter=300, tol=1e-6, seed=42):
-    """
-    K-means clustering implemented from scratch.
- 
-    Runs n_init times with different random seeds and returns
-    the result with the lowest inertia (sum of squared distances).
- 
-    Parameters
-    ----------
-    X        : (N, d) data matrix — rows are points, cols are features
-    k        : int, number of clusters
-    n_init   : int, number of random restarts
-    max_iter : int, maximum iterations per run
-    tol      : float, convergence threshold on centroid movement
-    seed     : int, base random seed
- 
-    Returns
-    -------
-    best_labels    : (N,) cluster assignment for each point
-    best_centroids : (k, d) final centroids
-    best_inertia   : float, sum of squared distances to nearest centroid
-    """
     rng          = np.random.default_rng(seed)
     best_labels  = None
     best_inertia = np.inf
@@ -235,14 +139,11 @@ def kmeans_scratch(X, k, n_init=10, max_iter=300, tol=1e-6, seed=42):
     for init_run in range(n_init):
  
         # initialise centroids (k-means++ style)
-        # Pick first centroid randomly, then pick each subsequent centroid
-        # with probability proportional to distance from nearest existing centroid
         centroids = []
         first_idx = rng.integers(0, len(X))
         centroids.append(X[first_idx].copy())
  
         for _ in range(k - 1):
-            # distance from each point to its nearest centroid so far
             dists = np.array([
                 min(np.sum((x - c) ** 2) for c in centroids)
                 for x in X
@@ -253,18 +154,14 @@ def kmeans_scratch(X, k, n_init=10, max_iter=300, tol=1e-6, seed=42):
  
         centroids = np.array(centroids)   # (k, d)
  
-        # iterate
         labels = np.zeros(len(X), dtype=int)
- 
+
         for iteration in range(max_iter):
- 
-            # Assignment step: each point -> nearest centroid
             dists_all = np.array([
                 np.sum((X - c) ** 2, axis=1) for c in centroids
             ])                                  # (k, N)
             new_labels = np.argmin(dists_all, axis=0)   # (N,)
- 
-            # Update step: recompute centroids as cluster means
+
             new_centroids = np.zeros_like(centroids)
             for cluster_id in range(k):
                 mask = new_labels == cluster_id
@@ -273,16 +170,14 @@ def kmeans_scratch(X, k, n_init=10, max_iter=300, tol=1e-6, seed=42):
                 else:
                     # empty cluster — reinitialise to a random point
                     new_centroids[cluster_id] = X[rng.integers(0, len(X))]
- 
-            # Convergence check
+
             shift = np.linalg.norm(new_centroids - centroids)
             centroids = new_centroids
             labels    = new_labels
- 
+
             if shift < tol:
                 break
- 
-        # Inertia: sum of squared distances to assigned centroid
+
         inertia = sum(
             np.sum((X[labels == c] - centroids[c]) ** 2)
             for c in range(k)

@@ -106,4 +106,4 @@ cpu, nmi = sweet_spot_experiment(run_fn=run_moore_wrapped, terminations=terminat
 plot_sweet_spot(terminations, cpu, nmi,
                 title="Sweet Spot — Moore Streaming",
                 xlabel="Processed Edges",
-                out="moore_sweet_spot.png")
+                out=BASE_DIR / "reports" / "figures" / "moore_sweet_spot.png")

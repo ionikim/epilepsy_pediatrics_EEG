@@ -12,6 +12,7 @@ env/
 
 .DS_Store        # Mac
 Thumbs.db        # Windows
+.jupyter/
 
 *.log
 *.tmp

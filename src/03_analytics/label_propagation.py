@@ -5,11 +5,9 @@ from collections import Counter, defaultdict
 import random
 from pathlib import Path
 
-# 1. Pfade robust definieren
 BASE_DIR = Path(__file__).resolve().parents[2]
 DATA_DIR = BASE_DIR / "data" / "graphs" / "adjacency_sparse"
 
-# 2. NPZ-Datei automatisch finden
 npz_files = list(DATA_DIR.glob("*.npz"))
 
 print("Gefundene NPZ-Dateien:")
@@ -24,13 +22,11 @@ if len(npz_files) == 0:
 FILE = npz_files[0]
 print("Verwende Datei:", FILE)
 
-# 3. Sparse Adjazenzmatrix laden
 A = sparse.load_npz(FILE)
 
 print("Adjacency shape:", A.shape)
 print("Non-zero edges (roh):", A.nnz)
 
-# 4. Thresholding (Noise-Reduktion)
 threshold = 0.2
 
 A = A.tocsr()
@@ -39,7 +35,6 @@ A.eliminate_zeros()
 
 print("Non-zero edges (nach Threshold):", A.nnz)
 
-# 5. Graph erzeugen
 G = nx.from_scipy_sparse_array(A)
 
 print(
@@ -47,9 +42,7 @@ print(
     f"{G.number_of_edges()} Kanten"
 )
 
-# 6. Label Propagation Algorithm
 def label_propagation(G, max_iter=100):
-    # Standard-LPA: jedes Node startet mit eigenem Label
     labels = {node: node for node in G.nodes()}
 
     for it in range(max_iter):
@@ -58,9 +51,7 @@ def label_propagation(G, max_iter=100):
         random.shuffle(nodes)
 
         for node in nodes:
-            neighbor_labels = [
-                labels[n] for n in G.neighbors(node)
-            ]
+            neighbor_labels = [labels[n] for n in G.neighbors(node)]
 
             if not neighbor_labels:
                 continue
@@ -77,17 +68,14 @@ def label_propagation(G, max_iter=100):
 
     return labels
 
-# 7. LPA einmal ausführen
 labels = label_propagation(G)
 
-# 8. Communities bauen
 communities = defaultdict(list)
 for node, label in labels.items():
     communities[label].append(node)
 
 print(f"\nGefundene Communities: {len(communities)}")
 
-# Security-Check (WICHTIG!)
 if len(communities) == 0:
     raise RuntimeError(
         "LPA hat keine Communities erzeugt. "
@@ -95,7 +83,6 @@ if len(communities) == 0:
         "oder isolierter Graph."
     )
 
-# 8a. Community-Größen & Coverage
 sizes = sorted([len(v) for v in communities.values()], reverse=True)
 print("Top Community-Größen:", sizes[:10])
 print("Größte Community-Anteil:", sizes[0] / G.number_of_nodes())
@@ -103,7 +90,6 @@ print("Größte Community-Anteil:", sizes[0] / G.number_of_nodes())
 coverage = len(labels) / G.number_of_nodes()
 print("Label-Abdeckung:", coverage)
 
-# 9. Stabilität über mehrere Runs
 def run_lpa_once():
     return label_propagation(G)
 
@@ -114,15 +100,11 @@ def label_agreement(a, b):
     return sum(a[n] == b[n] for n in common) / len(common)
 
 runs = [run_lpa_once() for _ in range(10)]
-agreements = [
-    label_agreement(runs[0], r)
-    for r in runs[1:]
-]
+agreements = [label_agreement(runs[0], r) for r in runs[1:]]
 
 print("Label-Stabilitäten:", agreements)
 print("Ø Stabilität:", np.mean(agreements))
 
-# 10. Modularity (realer Graph)
 from networkx.algorithms.community import modularity
 
 communities_list = [set(v) for v in communities.values()]
@@ -130,7 +112,6 @@ Q_real = modularity(G, communities_list)
 
 print("Modularity (real):", Q_real)
 
-# 11. Nullmodell (Degree-erhaltend)
 G_rand = nx.configuration_model(
     [d for _, d in G.degree()],
     create_using=nx.Graph()
@@ -149,5 +130,4 @@ Q_rand = modularity(
 )
 
 print("Modularity (random):", Q_rand)
-
 print("\nΔ Modularity (real − random):", Q_real - Q_rand)

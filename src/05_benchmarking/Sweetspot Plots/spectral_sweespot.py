@@ -72,4 +72,4 @@ cpu, nmi = sweet_spot_experiment(run_fn=run_spectral_wrapped, terminations=ks, n
 plot_sweet_spot(ks, cpu, nmi,
                 title="Sweet Spot — Spectral Laplacian Clustering",
                 xlabel="Number of Clusters (k)",
-                out="spectral_sweet_spot.png")
+                out=BASE_DIR / "reports" / "figures" / "spectral_sweet_spot.png")

@@ -62,4 +62,4 @@ cpu, nmi = sweet_spot_experiment(run_fn=run_lpa_wrapped, terminations=terminatio
 plot_sweet_spot(terminations, cpu, nmi,
                 title="Sweet Spot — Label Propagation",
                 xlabel="Max Iterations",
-                out="lpa_sweet_spot.png")
+                out=BASE_DIR / "reports" / "figures" / "lpa_sweet_spot.png")
