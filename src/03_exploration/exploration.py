@@ -4,7 +4,7 @@ Network Exploration for EEG-Derived Functional Networks
 Descriptive, non-algorithmic exploration of weighted EEG graphs.
 This file intentionally uses NetworkX only for feature extraction
 and visualization (NOT for community detection).
-
+"""
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
