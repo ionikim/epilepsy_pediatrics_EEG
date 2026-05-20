@@ -8,13 +8,7 @@ To prepare the data for network analysis, EEG recordings are preprocessed and se
 ---
 
 ## Dataset
-
-Two recordings from **patient chb01** were used:
-
-- **chb01_01.edf** – EEG recording without seizures (baseline interictal activity)  
-- **chb01_15.edf** – EEG recording containing a seizure event
-
-Using both recordings allows us to compare normal brain activity with seizure activity.
+: One recording (chb01_03.edf) from **patient chb01** was used which included a seizure annotation.
 
 ---
 
