@@ -57,7 +57,10 @@ plt.xlabel("Edge weight")
 plt.ylabel("Frequency")
 plt.title("Edge weight distribution")
 plt.tight_layout()
-plt.show()
+#below adjusted for lecturer so that pipline runs
+plt.savefig("exploration_fig1.png")
+plt.close()
+
 
 # ======================================================
 # 5. Node strength distribution (Fig. 2)
@@ -68,7 +71,9 @@ plt.xlabel("Node strength (weighted degree)")
 plt.ylabel("Frequency")
 plt.title("Node strength distribution")
 plt.tight_layout()
-plt.show()
+#below adjusted for lecturer so that pipline runs
+plt.savefig("exploration_fig2.png")
+plt.close()
 
 # ======================================================
 # 6. Global clustering coefficient
@@ -86,7 +91,9 @@ plt.title("Adjacency matrix (functional connectivity)")
 plt.xlabel("Node index")
 plt.ylabel("Node index")
 plt.tight_layout()
-plt.show()
+#below adjusted for lecturer so that pipline runs
+plt.savefig("exploration_fig3.png")
+plt.close()
 
 # ======================================================
 # 8. Network visualization (sampled, Fig. 4)
@@ -115,7 +122,9 @@ nx.draw_networkx_edges(
 plt.title("Sampled EEG functional network (spring layout)")
 plt.axis("off")
 plt.tight_layout()
-plt.show()
+#below adjusted for lecturer so that pipline runs
+plt.savefig("exploration_fig4.png")
+plt.close()
 
 # ======================================================
 # 9. Summary (for logging / report)
@@ -189,7 +198,9 @@ if isinstance(A_all, np.ndarray) and A_all.dtype == object and len(A_all) > 1:
     plt.title("Temporal evolution of EEG network properties")
     plt.legend()
     plt.tight_layout()
-    plt.show()
+    #below adjusted for lecturer so that pipline runs
+    plt.savefig("exploration_fig5.png")
+    plt.close()
 
 else:
     print(
