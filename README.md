@@ -10,11 +10,45 @@
 
 ## How to Run
 
-### 1. Set up the environment
+The project can be run either locally or in Google Colab. The easiest way to reproduce the full workflow is to run `pipeline.py` from the project root. This executes the complete pipeline in one step, including data loading, preprocessing, graph construction, analytics, benchmarking, and figure generation.
 
-Create and activate a virtual environment, then install dependencies. Inside the venv, `python` and `pip` always point to the correct version regardless of OS.
+Cloning the GitHub repository is the recommended method because it preserves the required folder structure and includes all scripts, dependencies, and configuration files. However, cloning is not strictly required; users may also download the repository as a ZIP file from GitHub and run the pipeline from the extracted folder.
+
+---
+
+## Quick Start — Run the Full Pipeline
+
+After setting up the environment and installing the dependencies, run the following command from the project root:
+
+```bash
+python pipeline.py
+```
+
+This is the recommended option for reproducing the complete project output. Generated figures are saved under `reports/figures/`, while processed data and intermediate outputs are saved under `data/`.
+
+If you only want to run specific parts of the project, use the individual scripts listed below.
+
+---
+
+## Option A — Local Setup (VS Code / Terminal)
+
+### 1. Get the repository
+
+Recommended method:
+
+```bash
+git clone https://github.com/ionikim/epilepsy_pediatrics_EEG.git
+cd epilepsy_pediatrics_EEG
+```
+
+Alternatively, users can download the repository manually via **Code → Download ZIP**, extract it, and open a terminal in the extracted project folder.
+
+### 2. Set up the environment
+
+Create and activate a virtual environment, then install dependencies. Inside the virtual environment, `python` and `pip` point to the active environment.
 
 **macOS / Linux**
+
 ```bash
 python3 -m venv env
 source env/bin/activate
@@ -22,13 +56,24 @@ pip install -r requirements.txt
 ```
 
 **Windows**
+
 ```bash
 python -m venv env
 env\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 2. Python scripts
+### 3. Run the full pipeline
+
+Run from the project root:
+
+```bash
+python pipeline.py
+```
+
+This runs the full project workflow in one step.
+
+### 4. Run individual Python scripts
 
 Run from the **project root** (`epilepsy_pediatrics_EEG/`) with the venv active:
 
