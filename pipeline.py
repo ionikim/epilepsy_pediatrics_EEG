@@ -697,71 +697,85 @@ def run_exploration():
     print(f"  Sampled avg weighted clustering coeff ({sample_size:,} nodes): {clustering_sample:.4f}")
 
     # ── 5. Edge-weight distribution ───────────────────────────────────────────
-    plt.figure(figsize=(6, 4))
-    plt.hist(weights, bins=60)
-    plt.xlabel("Edge weight"); plt.ylabel("Frequency")
-    plt.title("Edge weight distribution"); plt.tight_layout()
-    plt.savefig(FIG_DIR / "exploration_fig1.png", dpi=150); plt.close()
+    out = FIG_DIR / "exploration_fig1.png"
+    if not out.exists():
+        plt.figure(figsize=(6, 4))
+        plt.hist(weights, bins=60)
+        plt.xlabel("Edge weight"); plt.ylabel("Frequency")
+        plt.title("Edge weight distribution"); plt.tight_layout()
+        plt.savefig(out, dpi=150); plt.close()
 
     # ── 6. Edge-weight distribution (zoomed) ─────────────────────────────────
-    plt.figure(figsize=(6, 4))
-    plt.hist(weights, bins=100)
-    plt.xlim(0.9, 1.0)
-    plt.xlabel("Edge weight (zoomed)"); plt.ylabel("Frequency")
-    plt.title("Edge weight distribution (zoomed)"); plt.tight_layout()
-    plt.savefig(FIG_DIR / "exploration_fig1_zoom.png", dpi=150); plt.close()
+    out = FIG_DIR / "exploration_fig1_zoom.png"
+    if not out.exists():
+        plt.figure(figsize=(6, 4))
+        plt.hist(weights, bins=100)
+        plt.xlim(0.9, 1.0)
+        plt.xlabel("Edge weight (zoomed)"); plt.ylabel("Frequency")
+        plt.title("Edge weight distribution (zoomed)"); plt.tight_layout()
+        plt.savefig(out, dpi=150); plt.close()
 
     # ── 7. Node strength distribution ────────────────────────────────────────
-    plt.figure(figsize=(6, 4))
-    plt.hist(strengths, bins=60)
-    plt.xlabel("Node strength (weighted degree)"); plt.ylabel("Frequency")
-    plt.title("Node strength distribution"); plt.tight_layout()
-    plt.savefig(FIG_DIR / "exploration_fig2.png", dpi=150); plt.close()
+    out = FIG_DIR / "exploration_fig2.png"
+    if not out.exists():
+        plt.figure(figsize=(6, 4))
+        plt.hist(strengths, bins=60)
+        plt.xlabel("Node strength (weighted degree)"); plt.ylabel("Frequency")
+        plt.title("Node strength distribution"); plt.tight_layout()
+        plt.savefig(out, dpi=150); plt.close()
 
     # ── 8. Ranked node strengths ──────────────────────────────────────────────
-    sorted_strengths = np.sort(strengths)[::-1]
-    plt.figure(figsize=(6, 4))
-    plt.plot(sorted_strengths[:1000])
-    plt.xlabel("Rank"); plt.ylabel("Node strength")
-    plt.title("Ranked node strengths (top 1000)"); plt.tight_layout()
-    plt.savefig(FIG_DIR / "exploration_fig2_ranked.png", dpi=150); plt.close()
+    out = FIG_DIR / "exploration_fig2_ranked.png"
+    if not out.exists():
+        sorted_strengths = np.sort(strengths)[::-1]
+        plt.figure(figsize=(6, 4))
+        plt.plot(sorted_strengths[:1000])
+        plt.xlabel("Rank"); plt.ylabel("Node strength")
+        plt.title("Ranked node strengths (top 1000)"); plt.tight_layout()
+        plt.savefig(out, dpi=150); plt.close()
 
     # ── 9. Adjacency matrix heatmap (first 500 nodes to avoid OOM) ───────────
-    n_heat  = min(500, N)
-    heat_idx = np.arange(n_heat)
-    A_sub   = A[np.ix_(heat_idx, heat_idx)].toarray()
-    plt.figure(figsize=(5, 5))
-    plt.imshow(A_sub, cmap="viridis")
-    plt.colorbar(label="Edge weight")
-    plt.title(f"Adjacency matrix sample (first {n_heat} nodes)")
-    plt.xlabel("Node index"); plt.ylabel("Node index"); plt.tight_layout()
-    plt.savefig(FIG_DIR / "exploration_fig3.png", dpi=150); plt.close()
+    out = FIG_DIR / "exploration_fig3.png"
+    if not out.exists():
+        n_heat  = min(500, N)
+        heat_idx = np.arange(n_heat)
+        A_sub   = A[np.ix_(heat_idx, heat_idx)].toarray()
+        plt.figure(figsize=(5, 5))
+        plt.imshow(A_sub, cmap="viridis")
+        plt.colorbar(label="Edge weight")
+        plt.title(f"Adjacency matrix sample (first {n_heat} nodes)")
+        plt.xlabel("Node index"); plt.ylabel("Node index"); plt.tight_layout()
+        plt.savefig(out, dpi=150); plt.close()
 
     # ── 10. High-strength node subgraph ──────────────────────────────────────
-    strength_dict = dict(G.degree(weight="weight"))
-    sorted_nodes  = sorted(strength_dict, key=strength_dict.get, reverse=True)
-    top_nodes     = sorted_nodes[:1000]
-    G_top         = G.subgraph(top_nodes)
-    rng2          = np.random.default_rng(42)
-    sub50         = rng2.choice(list(G_top.nodes()), size=min(50, len(G_top)), replace=False).tolist()
-    G_sub_top     = G_top.subgraph(sub50)
-    pos_top = nx.spring_layout(G_sub_top, seed=42, weight="weight")
-    plt.figure(figsize=(7, 7))
-    nx.draw_networkx_nodes(G_sub_top, pos_top, node_size=300, node_color="steelblue", alpha=0.9)
-    nx.draw_networkx_edges(G_sub_top, pos_top, alpha=0.6)
-    plt.title("Subgraph of high-strength EEG nodes"); plt.axis("off"); plt.tight_layout()
-    plt.savefig(FIG_DIR / "exploration_fig4_high_strength.png", dpi=150); plt.close()
+    out = FIG_DIR / "exploration_fig4_high_strength.png"
+    if not out.exists():
+        strength_dict = dict(G.degree(weight="weight"))
+        sorted_nodes  = sorted(strength_dict, key=strength_dict.get, reverse=True)
+        top_nodes     = sorted_nodes[:1000]
+        G_top         = G.subgraph(top_nodes)
+        rng2          = np.random.default_rng(42)
+        sub50         = rng2.choice(list(G_top.nodes()), size=min(50, len(G_top)), replace=False).tolist()
+        G_sub_top     = G_top.subgraph(sub50)
+        pos_top = nx.spring_layout(G_sub_top, seed=42, weight="weight")
+        plt.figure(figsize=(7, 7))
+        nx.draw_networkx_nodes(G_sub_top, pos_top, node_size=300, node_color="steelblue", alpha=0.9)
+        nx.draw_networkx_edges(G_sub_top, pos_top, alpha=0.6)
+        plt.title("Subgraph of high-strength EEG nodes"); plt.axis("off"); plt.tight_layout()
+        plt.savefig(out, dpi=150); plt.close()
 
     # ── 11. Random sample subgraph ────────────────────────────────────────────
-    rng3        = np.random.default_rng(42)
-    sample_rand = rng3.choice(np.arange(N), size=min(30, N), replace=False).tolist()
-    G_sub_rand  = G.subgraph(sample_rand)
-    pos_rand = nx.spring_layout(G_sub_rand, seed=42, weight="weight")
-    plt.figure(figsize=(7, 7))
-    nx.draw_networkx_nodes(G_sub_rand, pos_rand, node_size=300, node_color="steelblue", alpha=0.9)
-    nx.draw_networkx_edges(G_sub_rand, pos_rand, width=1.2, alpha=0.6)
-    plt.title("Sampled EEG functional network (random)"); plt.axis("off"); plt.tight_layout()
-    plt.savefig(FIG_DIR / "exploration_fig4.png", dpi=150); plt.close()
+    out = FIG_DIR / "exploration_fig4.png"
+    if not out.exists():
+        rng3        = np.random.default_rng(42)
+        sample_rand = rng3.choice(np.arange(N), size=min(30, N), replace=False).tolist()
+        G_sub_rand  = G.subgraph(sample_rand)
+        pos_rand = nx.spring_layout(G_sub_rand, seed=42, weight="weight")
+        plt.figure(figsize=(7, 7))
+        nx.draw_networkx_nodes(G_sub_rand, pos_rand, node_size=300, node_color="steelblue", alpha=0.9)
+        nx.draw_networkx_edges(G_sub_rand, pos_rand, width=1.2, alpha=0.6)
+        plt.title("Sampled EEG functional network (random)"); plt.axis("off"); plt.tight_layout()
+        plt.savefig(out, dpi=150); plt.close()
 
     print(f"  Figures → {FIG_DIR}")
     _ok("Network exploration", f"{N:,} nodes, {M:,} edges")
@@ -987,8 +1001,10 @@ def run_stream_moore():
     ax.set_title("Stream-Moore Benchmark\nInterictal vs Ictal · CHB-01", size=13, pad=20)
     ax.legend(loc="upper right", bbox_to_anchor=(1.35, 1.15), fontsize=10)
     plt.tight_layout()
-    plt.savefig(FIG_DIR / "spider_benchmark.png", dpi=150, bbox_inches="tight"); plt.close()
-    print("  Saved spider_benchmark.png")
+    out = FIG_DIR / "spider_benchmark.png"
+    if not out.exists():
+        plt.savefig(out, dpi=150, bbox_inches="tight"); print("  Saved spider_benchmark.png")
+    plt.close()
     _ok("Stream-Moore", f"{len(unique):,} communities, {runtime:.1f}s")
     display_figures_for_section(
         "SECTION 5a · Stream-Moore Algorithm",
@@ -2157,8 +2173,10 @@ def run_benchmarking():
     plot_single(axes[1,1], m_x, mc, mn, "Moore Streaming", "Processed edges")
     fig.suptitle("Sweet-Spot Analysis: CPU–Stability Trade-offs", fontsize=13, y=0.98)
     plt.tight_layout()
-    plt.savefig(FIG_DIR / "sweet_spot_4algorithms.png", dpi=150); plt.close()
-    print("  Saved sweet_spot_4algorithms.png")
+    out = FIG_DIR / "sweet_spot_4algorithms.png"
+    if not out.exists():
+        plt.savefig(out, dpi=150); print("  Saved sweet_spot_4algorithms.png")
+    plt.close()
 
     # Radar diagram
     labels_r  = ["Runtime", "Stability", "Adaptability", "Interpretability"]
@@ -2176,8 +2194,10 @@ def run_benchmarking():
     plt.title("Radar Diagram — Algorithm Comparison", pad=25)
     plt.legend(loc="lower center", bbox_to_anchor=(0.5, -0.35), ncol=2)
     plt.tight_layout()
-    plt.savefig(FIG_DIR / "radar_diagram.png", dpi=300, bbox_inches="tight"); plt.close()
-    print("  Saved radar_diagram.png")
+    out = FIG_DIR / "radar_diagram.png"
+    if not out.exists():
+        plt.savefig(out, dpi=300, bbox_inches="tight"); print("  Saved radar_diagram.png")
+    plt.close()
     _ok("Benchmarking", "sweet-spot + radar saved")
     display_figures_for_section(
         "SECTION 8 · Benchmarking",
