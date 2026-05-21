@@ -73,6 +73,8 @@ python pipeline.py
 
 This runs the full project workflow in one step.
 
+---
+
 ### 4. Run individual Python scripts
 
 Run from the **project root** (`epilepsy_pediatrics_EEG/`) with the venv active:
@@ -85,7 +87,7 @@ Run from the **project root** (`epilepsy_pediatrics_EEG/`) with the venv active:
 | `src/03_analytics/laplacian_spectral_clustering.py` | Spectral clustering — saves 4 PNG plots | `python src/03_analytics/laplacian_spectral_clustering.py` |
 | `src/03_analytics/stream_moore_benchmark.py` | Stream-Moore benchmark metrics | `python src/03_analytics/stream_moore_benchmark.py` |
 
-### 3. Interactive Streamlit apps
+### a. Interactive Streamlit apps
 
 ```bash
 streamlit run src/03_analytics/streamlit_hierarchical.py          # manual slider
@@ -93,7 +95,7 @@ streamlit run src/03_analytics/streamlit_hierarchical_autoplay.py # auto-play an
 streamlit run src/03_analytics/streamlit_spectral.py              # spectral clustering live
 ```
 
-### 4. Jupyter notebooks
+### b. Jupyter notebooks
 
 Launch JupyterLab from the project root and open notebooks in `src/`:
 
