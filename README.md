@@ -31,7 +31,7 @@ The pipeline downloads the required raw EEG files if missing, creates the requir
 
 ---
 
-## Option A — Local Setup (VS Code / Terminal)
+## Local Setup (VS Code / Terminal)
 
 ### 1. Get the repository
 
