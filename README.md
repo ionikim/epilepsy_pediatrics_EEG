@@ -189,6 +189,7 @@ We will benchmark our solution against existing algorithms and evaluate the stre
 | checked for benchmarking approaches  2   | work in progress: find a solution without groundtruth -> Evaluation using Clustering Quality Measures: Clustering quality measures, e.g., SSE (sum of squared errors) or inter- cluster distance  Quality measures used to evaluate community detection should be different from the ones used to find communities.  | Simon            |
 | Creating Graphs in Cosmograph | Created Graphs after analysis to show interictal vs. ictal differences in communites and regional organisation                    | Antonia |
 | Insights & Analysis |   Get the big picture and structure for report                    | Simon |
-| Draft Final report |     -                | Simon |
+| Draft Final report |                     | Simon |
 | Writing Final Report |                 | Everyone |
+| Presentation |                 | Marina |
 | Adapting and Combining seperated codes into one code |                 | Jione |
