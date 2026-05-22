@@ -140,7 +140,9 @@ We use data from the CHB-MIT Scalp EEG Database, which includes EEG recordings f
 
 Instead of measuring pairwise correlations between electrodes, we build a Visibility Graph (VG) separately for each electrode’s EEG time series. In each 1-second window, sampled at 256 timepoints, two timepoints are connected if they can “see” each other without any intermediate signal value blocking the line between them. In this way, the graph captures the temporal structure of the signal. More regular and seizure-like signals tend to form denser graphs with more long-range connections and higher node degree, while irregular normal EEG activity tends to produce sparser graphs with mostly short-range connections.
 
-The precomputed adjacency matrix is stored as a sparse matrix of size 176,640 × 176,640, representing all VG connections across 23 electrodes and 7,680 timepoints. Each node index corresponds to both an electrode and a specific timepoint within the full recording.
+The precomputed adjacency matrix is stored as a sparse matrix of size 176,640 × 176,640, representing all VG connections across 23 electrodes and 7,680 timepoints. Each node index corresponds to both an electrode and a specific timepoint within the full recording. 
+
+The graph is stored in Git Large File Storage.
 
 ### 2) Network Exploration & Analytics (Antonia Spörk,Simon Krummenacher): 
 
