@@ -193,5 +193,6 @@ We will benchmark our solution against existing algorithms and evaluate the stre
 | Insights & Analysis |   Get the big picture and structure for report                    | Simon |
 | Draft Final report |                     | Simon |
 | Writing Final Report |                 | Everyone |
+| Final Correction and Edit |                 | Marina |
 | Presentation |                 | Marina |
 | Final Code Aggregation |                 | Jione |
