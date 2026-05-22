@@ -25,17 +25,9 @@ After setting up the environment and installing the dependencies, Place `pipelin
 ```bash
 pip install -r requirements.txt
 python pipeline.py
+```
 
 The pipeline downloads the required raw EEG files if missing, creates the required output folders, builds and validates the MVG sparse adjacency matrix, and generates the main outputs.
-
-For the full project context, notebooks, dashboards, and archived scripts, use the complete GitHub repository.
-
-Useful Options
-python pipeline.py --validate-only      # validate the generated adjacency matrix
-python pipeline.py --build-graph-only   # build the graph from raw EEG only
-python pipeline.py --skip-heavy         # skip expensive downstream steps
-python pipeline.py --section spectral   # run one section only
-python pipeline.py --help               # show all available options
 
 ---
 
