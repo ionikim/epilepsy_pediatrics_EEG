@@ -18,15 +18,24 @@ Cloning the GitHub repository is the recommended method because it preserves the
 
 ## Quick Start — Run the Full Pipeline
 
-After setting up the environment and installing the dependencies, run the following command from the project root:
+The main pipeline is self-contained. For the core reproducible workflow, only `pipeline.py` and `requirements.txt` are required. The script creates the required output folders and downloads the raw EEG files if they are missing.
+
+After setting up the environment and installing the dependencies, Place `pipeline.py` and `requirements.txt` in the same folder, then run:
 
 ```bash
+pip install -r requirements.txt
 python pipeline.py
-```
 
-This is the recommended option for reproducing the complete project output. Generated figures are saved under `reports/figures/`, while processed data and intermediate outputs are saved under `data/`.
+The pipeline downloads the required raw EEG files if missing, creates the required output folders, builds and validates the MVG sparse adjacency matrix, and generates the main outputs.
 
-If you only want to run specific parts of the project, use the individual scripts listed below.
+For the full project context, notebooks, dashboards, and archived scripts, use the complete GitHub repository.
+
+Useful Options
+python pipeline.py --validate-only      # validate the generated adjacency matrix
+python pipeline.py --build-graph-only   # build the graph from raw EEG only
+python pipeline.py --skip-heavy         # skip expensive downstream steps
+python pipeline.py --section spectral   # run one section only
+python pipeline.py --help               # show all available options
 
 ---
 
@@ -185,11 +194,12 @@ We will benchmark our solution against existing algorithms and evaluate the stre
 | Build a Streamlit Live Demo                    | Built an interactive live demonstration of the sliding window network analysis using Streamlit, with auto-playing animation showing how the EEG functional connectivity network evolves second by second across the interictal-to-ictal transition                                                                 | Antonia   
 | Applied Laplacian Spectral Clustering          | Implemented spectral clustering from scratch   | Antonia  
 | Applied Label Propagation Algorithm (LPA)      | Applied the LPA from scratch to HVG adjacency matrix.  | Simon            |
-| checked for benchmarking approaches  1   | Community Detection in Social Networks: An In-depth Benchmarking Study with a Procedure-Oriented Framework -> LPA works best but only with ground truth! Thus we need to evaluate without ground thruth  | Simon            |
-| checked for benchmarking approaches  2   | work in progress: find a solution without groundtruth -> Evaluation using Clustering Quality Measures: Clustering quality measures, e.g., SSE (sum of squared errors) or inter- cluster distance  Quality measures used to evaluate community detection should be different from the ones used to find communities.  | Simon            |
+| checked for benchmarking approaches  1   | Comparison between Label Propagation from-scratch and Network X version   | Antonia            |
+| checked for benchmarking approaches  2   | Community Detection in Social Networks: An In-depth Benchmarking Study with a Procedure-Oriented Framework -> LPA works best but only with ground truth! Thus we need to evaluate without ground thruth  | Simon            |
+| checked for benchmarking approaches  3   | work in progress: find a solution without groundtruth -> Evaluation using Clustering Quality Measures: Clustering quality measures, e.g., SSE (sum of squared errors) or inter- cluster distance  Quality measures used to evaluate community detection should be different from the ones used to find communities.  | Simon            |
 | Creating Graphs in Cosmograph | Created Graphs after analysis to show interictal vs. ictal differences in communites and regional organisation                    | Antonia |
 | Insights & Analysis |   Get the big picture and structure for report                    | Simon |
 | Draft Final report |                     | Simon |
 | Writing Final Report |                 | Everyone |
 | Presentation |                 | Marina |
-| Adapting and Combining seperated codes into one code |                 | Jione |
+| Final Code Aggregation |                 | Jione |
