@@ -65,6 +65,7 @@ PARSER.add_argument(
         "cosmograph-analytics",
         "cosmograph-explorative",
         "benchmarking",
+        "lpa-comparison",
         "html",
         "downstream",
     ],
@@ -2208,6 +2209,184 @@ def run_benchmarking():
     )
 
 # ══════════════════════════════════════════════════════════════════════════════
+# SECTION 8b · LPA Comparison  (Custom vs NetworkX)
+# ══════════════════════════════════════════════════════════════════════════════
+def run_lpa_comparison():
+    print_section("SECTION 8b · LPA Comparison  (Custom vs NetworkX)")
+    from networkx.algorithms.community import modularity as nx_modularity
+    from networkx.algorithms.community import label_propagation_communities
+
+    THRESHOLD = 0.2
+    N_RUNS    = 10
+
+    def _nmi(labels_a, labels_b):
+        """NMI via sparse joint-count — O(n)."""
+        a, b = np.asarray(labels_a), np.asarray(labels_b)
+        n = len(a)
+        _, a_idx = np.unique(a, return_inverse=True)
+        _, b_idx = np.unique(b, return_inverse=True)
+        joint = Counter(zip(a_idx.tolist(), b_idx.tolist()))
+        pa = np.bincount(a_idx) / n
+        pb = np.bincount(b_idx) / n
+        mi = sum(
+            cnt / n * np.log((cnt / n) / (pa[i] * pb[j]))
+            for (i, j), cnt in joint.items()
+        )
+        ha = -(pa[pa > 0] * np.log(pa[pa > 0])).sum()
+        hb = -(pb[pb > 0] * np.log(pb[pb > 0])).sum()
+        return float(2 * mi / (ha + hb)) if ha + hb > 0 else 1.0
+
+    def _to_labels(n_nodes, partition):
+        labels = np.empty(n_nodes, dtype=int)
+        for comm_id, community in enumerate(partition):
+            for node in community:
+                labels[node] = comm_id
+        return labels
+
+    def _to_sets(labels):
+        comms = defaultdict(set)
+        for node, lab in enumerate(labels):
+            comms[lab].add(node)
+        return list(comms.values())
+
+    def _custom_lpa(G_, max_iter=100, seed=None):
+        if seed is not None:
+            random.seed(seed)
+        lbs = {node: node for node in G_.nodes()}
+        for _ in range(max_iter):
+            changes = 0
+            nodes = list(G_.nodes()); random.shuffle(nodes)
+            for node in nodes:
+                nb = [lbs[n] for n in G_.neighbors(node)]
+                if not nb:
+                    continue
+                new_lb = Counter(nb).most_common(1)[0][0]
+                if lbs[node] != new_lb:
+                    lbs[node] = new_lb; changes += 1
+            if changes == 0:
+                break
+        comms = defaultdict(set)
+        for node, lb in lbs.items():
+            comms[lb].add(node)
+        return list(comms.values())
+
+    # ── Load graph ────────────────────────────────────────────────────────────
+    A = sp.load_npz(NPZ_PATH).tocsr()
+    A.data[A.data < THRESHOLD] = 0; A.eliminate_zeros()
+    G = nx.from_scipy_sparse_array(A)
+    n_nodes = G.number_of_nodes()
+    print(f"  Graph: {n_nodes:,} nodes | {G.number_of_edges():,} edges (threshold={THRESHOLD})")
+
+    # ── Custom LPA runs ───────────────────────────────────────────────────────
+    print(f"  Running custom LPA {N_RUNS} times …")
+    custom_runs, custom_times = [], []
+    for i in range(N_RUNS):
+        t0 = time.perf_counter()
+        partition = _custom_lpa(G, seed=i)
+        custom_times.append(time.perf_counter() - t0)
+        custom_runs.append(_to_labels(n_nodes, partition))
+        print(f"    run {i+1}: {len(partition)} communities  ({custom_times[-1]:.2f}s)")
+    print(f"  Custom mean runtime: {np.mean(custom_times):.2f}s")
+
+    # ── NetworkX LPA runs ─────────────────────────────────────────────────────
+    print(f"  Running NetworkX LPA {N_RUNS} times …")
+    nx_runs, nx_times = [], []
+    for i in range(N_RUNS):
+        t0 = time.perf_counter()
+        partition = list(label_propagation_communities(G))
+        nx_times.append(time.perf_counter() - t0)
+        nx_runs.append(_to_labels(n_nodes, partition))
+        print(f"    run {i+1}: {len(partition)} communities  ({nx_times[-1]:.2f}s)")
+    print(f"  NetworkX mean runtime: {np.mean(nx_times):.2f}s")
+
+    # ── Metrics ───────────────────────────────────────────────────────────────
+    Q_custom = nx_modularity(G, _to_sets(custom_runs[0]))
+    Q_nx     = nx_modularity(G, _to_sets(nx_runs[0]))
+
+    custom_stability = float(np.mean([
+        _nmi(custom_runs[0], custom_runs[i]) for i in range(1, N_RUNS)
+    ]))
+    nx_stability = float(np.mean([
+        _nmi(nx_runs[0], nx_runs[i]) for i in range(1, N_RUNS)
+    ]))
+    nmi_between = _nmi(custom_runs[0], nx_runs[0])
+
+    W = 35
+    print(f"\n{'='*67}")
+    print(f"  BENCHMARK SUMMARY — LPA Comparison · CHB-01 chb01_03")
+    print(f"{'='*67}")
+    print(f"  {'Metric':<{W}} {'Custom LPA':>12} {'NetworkX LPA':>14}")
+    print(f"  {'-'*62}")
+    print(f"  {'Communities (run 1)':<{W}} "
+          f"{len(_to_sets(custom_runs[0])):>12} "
+          f"{len(_to_sets(nx_runs[0])):>14}")
+    print(f"  {'Modularity':<{W}} {Q_custom:>12.4f} {Q_nx:>14.4f}")
+    print(f"  {'Stability (mean NMI across runs)':<{W}} "
+          f"{custom_stability:>12.4f} {nx_stability:>14.4f}")
+    print(f"  {'Mean runtime (s)':<{W}} "
+          f"{np.mean(custom_times):>12.2f} {np.mean(nx_times):>14.2f}")
+    print(f"  {'-'*62}")
+    print(f"  {'NMI between implementations':<{W}} {nmi_between:>12.4f}")
+    print(f"{'='*67}")
+
+    # ── Figure 1: community size distributions ────────────────────────────────
+    custom_sizes = sorted([len(c) for c in _to_sets(custom_runs[0])], reverse=True)
+    nx_sizes     = sorted([len(c) for c in _to_sets(nx_runs[0])],     reverse=True)
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+    for ax, sizes, title, color in [
+        (axes[0], custom_sizes, "Custom LPA",   "steelblue"),
+        (axes[1], nx_sizes,     "NetworkX LPA", "tomato"),
+    ]:
+        ax.bar(range(len(sizes)), sizes, color=color, alpha=0.8)
+        ax.set_xlabel("Community rank"); ax.set_ylabel("Size (nodes)")
+        ax.set_title(f"{title} — {len(sizes)} communities")
+    plt.suptitle("LPA Community Size Distributions", fontsize=13)
+    plt.tight_layout()
+    out = FIG_DIR / "lpa_comparison_size_dist.png"
+    if not out.exists():
+        plt.savefig(out, dpi=150); print("  Saved lpa_comparison_size_dist.png")
+    plt.close()
+
+    # ── Figure 2: stability (NMI vs run 1) across runs ───────────────────────
+    custom_nmi_runs = [_nmi(custom_runs[0], r) for r in custom_runs[1:]]
+    nx_nmi_runs     = [_nmi(nx_runs[0],     r) for r in nx_runs[1:]]
+    fig, ax = plt.subplots(figsize=(8, 4))
+    run_ids = range(1, N_RUNS)
+    ax.plot(run_ids, custom_nmi_runs, "o-", color="steelblue", label="Custom LPA")
+    ax.plot(run_ids, nx_nmi_runs,     "s-", color="tomato",    label="NetworkX LPA")
+    ax.set_xlabel("Run index"); ax.set_ylabel("NMI vs run 1")
+    ax.set_ylim(0, 1.05); ax.set_title("LPA Stability across runs"); ax.legend()
+    plt.tight_layout()
+    out = FIG_DIR / "lpa_comparison_stability.png"
+    if not out.exists():
+        plt.savefig(out, dpi=150); print("  Saved lpa_comparison_stability.png")
+    plt.close()
+
+    _ok("LPA Comparison", f"Q_custom={Q_custom:.4f}, Q_nx={Q_nx:.4f}, NMI_between={nmi_between:.4f}")
+    display_table_for_section(
+        "SECTION 8b · LPA Comparison — Summary",
+        {
+            "Communities — Custom LPA":   len(_to_sets(custom_runs[0])),
+            "Communities — NetworkX LPA": len(_to_sets(nx_runs[0])),
+            "Modularity — Custom LPA":    f"{Q_custom:.4f}",
+            "Modularity — NetworkX LPA":  f"{Q_nx:.4f}",
+            "Stability (NMI) — Custom":   f"{custom_stability:.4f}",
+            "Stability (NMI) — NetworkX": f"{nx_stability:.4f}",
+            "NMI between implementations": f"{nmi_between:.4f}",
+            "Mean runtime — Custom (s)":  f"{np.mean(custom_times):.2f}",
+            "Mean runtime — NetworkX (s)": f"{np.mean(nx_times):.2f}",
+        },
+    )
+    display_figures_for_section(
+        "SECTION 8b · LPA Comparison",
+        [
+            "lpa_comparison_size_dist.png",
+            "lpa_comparison_stability.png",
+        ],
+    )
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # SECTION 9 · HTML Visualisation Generation
 # ══════════════════════════════════════════════════════════════════════════════
 def generate_html_visualisations():
@@ -2604,6 +2783,7 @@ def run_downstream_analysis():
         _skip("Cosmograph analytics CSV", "--skip-heavy")
         _skip("Cosmograph explorative CSV", "--skip-heavy")
         _skip("Benchmarking", "--skip-heavy")
+        _skip("LPA Comparison", "--skip-heavy")
         _skip("HTML visualisations", "--skip-heavy")
         return
     generate_html_visualisations()
@@ -2615,6 +2795,7 @@ def run_downstream_analysis():
     run_report_figures()
     run_cosmograph_analytics()
     run_benchmarking()
+    run_lpa_comparison()
 
 def require_valid_adjacency():
     if not validate_adjacency(NPZ_PATH):
@@ -2666,6 +2847,9 @@ def run_one_section(section):
     elif section == "benchmarking":
         require_valid_adjacency()
         run_benchmarking()
+    elif section == "lpa-comparison":
+        require_valid_adjacency()
+        run_lpa_comparison()
     elif section == "html":
         require_valid_adjacency()
         generate_html_visualisations()
