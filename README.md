@@ -161,7 +161,7 @@ eeg_vg_comparison_static.html — Compares pre-ictal and ictal circular visibili
 eeg_visibility_graph_online_mini_timepoint.html — Animates all 23 electrodes as circular visibility graphs to show seizure evolution over time.
 eeg_vg_network_inter.html — Visualizes changing functional connectivity across 23 electrodes during seizure onset.
 
-### 4) Analysis and Interpretation (Simon Krummenacher): 
+### 4) Analysis and Interpretation (Simon Krummenacher, Antonia Spörk): 
 
 We will benchmark our solution against existing algorithms and evaluate the strengths and limitations of our project. If capacity allows, we might additionally predict other seizure states within/between subjects and/or conduct an influencer analysis of seizure source electrodes. 
 
